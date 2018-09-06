@@ -2,8 +2,10 @@ package athena
 
 import (
 	"database/sql/driver"
+	"encoding/hex"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -34,6 +36,8 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 
 	val := *rawValue
 	switch athenaType {
+	case "tinyint":
+		return strconv.ParseInt(val, 10, 8)
 	case "smallint":
 		return strconv.ParseInt(val, 10, 16)
 	case "integer":
@@ -54,9 +58,28 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 		return strconv.ParseFloat(val, 64)
 	case "varchar", "string":
 		return val, nil
+	case "varbinary":
+		arr := strings.Split(val, " ")
+		dst := make([]byte, 1)
+		ret := make([]byte, len(arr))
+		for i, v := range arr {
+			src := []byte(v)
+			if len(src) != 2 {
+				return nil, fmt.Errorf("unexpected byte length %d", len(src))
+			}
+			n, err := hex.Decode(dst, src)
+			if err != nil {
+				return nil, err
+			}
+			if n != 1 {
+				return nil, fmt.Errorf("unexpected byte length %d", n)
+			}
+			ret[i] = dst[0]
+		}
+		return ret, nil
 	case "timestamp":
 		return time.Parse(TimestampLayout, val)
 	default:
-		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
+		return nil, fmt.Errorf("unknown type `%s` with value %s", athenaType, val)
 	}
 }
