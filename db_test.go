@@ -40,6 +40,7 @@ func TestQuery(t *testing.T) {
 
 	expected := []dummyRow{
 		{
+			TinyintType:   1,
 			SmallintType:  1,
 			IntType:       2,
 			BigintType:    3,
@@ -50,6 +51,7 @@ func TestQuery(t *testing.T) {
 			TimestampType: athenaTimestamp(time.Date(2006, 1, 2, 3, 4, 11, 0, time.UTC)),
 		},
 		{
+			TinyintType:   7,
 			SmallintType:  9,
 			IntType:       8,
 			BigintType:    0,
@@ -60,6 +62,7 @@ func TestQuery(t *testing.T) {
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 1, 11, 12, 0, time.UTC)),
 		},
 		{
+			TinyintType:   7,
 			SmallintType:  9,
 			IntType:       8,
 			BigintType:    0,
@@ -70,7 +73,7 @@ func TestQuery(t *testing.T) {
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 20, 11, 12, 0, time.UTC)),
 		},
 	}
-	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "float", "double", "varchar", "timestamp"}
+	expectedTypeNames := []string{"varchar", "tinyint", "smallint", "integer", "bigint", "boolean", "float", "double", "varchar", "timestamp"}
 	harness.uploadData(expected)
 
 	rows := harness.mustQuery("select * from %s", harness.table)
@@ -82,6 +85,7 @@ func TestQuery(t *testing.T) {
 		require.NoError(t, rows.Scan(
 			&row.NullValue,
 
+			&row.TinyintType,
 			&row.SmallintType,
 			&row.IntType,
 			&row.BigintType,
@@ -120,6 +124,7 @@ func TestOpen(t *testing.T) {
 
 type dummyRow struct {
 	NullValue     *struct{}       `json:"nullValue"`
+	TinyintType   int             `json:"tinyintType"`
 	SmallintType  int             `json:"smallintType"`
 	IntType       int             `json:"intType"`
 	BigintType    int             `json:"bigintType"`
@@ -156,6 +161,7 @@ func (a *athenaHarness) setupTable() {
 	a.table = "t_" + strings.Replace(id.String(), "-", "_", -1)
 	a.mustExec(`CREATE EXTERNAL TABLE %[1]s (
 	nullValue string,
+	tinyintType tinyint,
 	smallintType smallint,
 	intType int,
 	bigintType bigint,
