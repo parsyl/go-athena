@@ -58,7 +58,7 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 		return strconv.ParseFloat(val, 64)
 	case "varchar", "string":
 		return val, nil
-	case "varbinary":
+	case "varbinary", "binary":
 		arr := strings.Split(val, " ")
 		dst := make([]byte, 1)
 		ret := make([]byte, len(arr))
